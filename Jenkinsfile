@@ -36,7 +36,7 @@ pipeline {
                         sleep 2
                     done
                     curl -fs http://localhost:5000/health
-                    curl -fsL -X POST -d "body=jenkins-test" http://localhost:5000/add -o /dev/null
+                    curl -fsL -d "body=jenkins-test" http://localhost:5000/add -o /dev/null
                     curl -fs http://localhost:5000/ | grep -q "jenkins-test"
                 '''
             }
