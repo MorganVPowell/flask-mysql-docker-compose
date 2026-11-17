@@ -50,7 +50,7 @@ The Docker Hub credentials are stored in Jenkins (credential ID `dockerhub`) and
 
 Image pushed to Docker Hub with the build number and `latest` tags:
 
-![Docker Hub repository showing latest and build-number tags](docs/dockerhub-result.png)
+![Docker Hub repository showing latest and build-number tags](dockerhub-result.png)
 
 ## Issues hit and fixes
 
