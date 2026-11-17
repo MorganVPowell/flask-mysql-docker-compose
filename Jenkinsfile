@@ -7,6 +7,7 @@ pipeline {
 
     environment {
         COMPOSE_PROJECT_NAME = 'flask-mysql-ci'
+        IMAGE_NAME = 'flask-mysql-app'
     }
 
     stages {
@@ -41,11 +42,27 @@ pipeline {
                 '''
             }
         }
+
+        stage('Push to Docker Hub') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub',
+                                                  usernameVariable: 'DH_USER',
+                                                  passwordVariable: 'DH_PASS')]) {
+                    sh '''
+                        echo "$DH_PASS" | docker login -u "$DH_USER" --password-stdin
+                        docker build -t "$DH_USER/$IMAGE_NAME:$BUILD_NUMBER" -t "$DH_USER/$IMAGE_NAME:latest" .
+                        docker push "$DH_USER/$IMAGE_NAME:$BUILD_NUMBER"
+                        docker push "$DH_USER/$IMAGE_NAME:latest"
+                    '''
+                }
+            }
+        }
     }
 
     post {
         always {
             sh 'docker compose down -v || true'
+            sh 'docker logout || true'
         }
     }
 }
