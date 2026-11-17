@@ -4,6 +4,8 @@ A Flask message board backed by MySQL, containerized with Docker and run with Do
 
 ## Architecture
 
+![Architecture diagram: Jenkins CI/CD pipeline on AWS EC2](docs/architecture.png)
+
 - **web:** Flask app served by gunicorn, built from the Dockerfile in this repo
 - **db:** MySQL 8.0 with a named volume (`db_data`) so messages survive restarts
 - Compose waits for the database health check to pass before starting the web container
