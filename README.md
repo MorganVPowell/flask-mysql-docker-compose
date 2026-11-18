@@ -54,6 +54,28 @@ Image pushed to Docker Hub with the build number and `latest` tags:
 
 ![Docker Hub repository showing latest and build-number tags](docs/dockerhub-result.png)
 
+## Kubernetes deployment (kind)
+
+The image pushed by Jenkins (`notmorgan22/flask-mysql-app`) is deployed to a local Kubernetes cluster created with kind.
+
+- `k8s/mysql.yaml`: MySQL Deployment, a PersistentVolumeClaim so data survives pod restarts, and a Service named `db`
+- `k8s/web.yaml`: Flask Deployment with 2 replicas, readiness and liveness probes on `/health`, and a Service named `web`
+- Database passwords live in a Kubernetes Secret created with `kubectl`, never in the repo
+
+```
+kind create cluster --name flask-cluster
+kubectl create secret generic db-credentials --from-literal=password=<choose> --from-literal=root-password=<choose>
+kubectl apply -f k8s/
+kubectl get pods
+kubectl port-forward svc/web 5000:5000
+```
+
+Open http://localhost:5000.
+
+![Pods running](docs/k8s-pods.png)
+
+![App on Kubernetes](docs/k8s-app.png)
+
 ## Issues hit and fixes
 
 - **`wsl` not recognized on Windows 10 Home:** the WSL and Virtual Machine Platform features were not enabled. Enabled both with DISM, restarted, and ran `wsl --update`.
@@ -64,9 +86,10 @@ Image pushed to Docker Hub with the build number and `latest` tags:
 - **Smoke test failed with `curl -X POST ... -L`:** forcing POST made curl repeat POST on the redirect. Removed `-X POST` so `-d` sends the POST and the redirect is followed as a GET.
 - **`git push` from EC2 rejected my password:** GitHub requires a personal access token for HTTPS pushes. Edited the file on GitHub instead and synced the server with `git reset --hard origin/main`.
 - **GitHub push protection flagged a secret:** kept the Docker Hub token in Jenkins credentials only, never in the repo.
+- **Web pods restarted once at startup:** the Flask app retries the database connection, but the pods started before MySQL was ready, so Kubernetes restarted them once. They then stayed stable, and the readiness probes keep traffic away until `/health` passes.
+- **Database credentials:** created the Kubernetes Secret from the command line so no password is committed to the repo.
 
 ## Next
 
 - Add automated tests (e.g. `pytest`) and a lint stage
 - Auto-trigger builds on push with a GitHub webhook
-- Deploy step (run the pushed image on a server)
